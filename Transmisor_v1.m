@@ -7,14 +7,14 @@ function [output_signal,max_val_band,offset]=Cuantify(input_signal,bits)
   offset= min(input_signal);
   signal=abs(offset).+input_signal;
   max_val_band=max(signal);
-  output_signal=round(signal./max_val_band*(bits^2-1));
+  output_signal=round(signal./max_val_band*(2^bits-1));
   %figure();
   %plot(output_signal);  
   output_signal=round(output_signal);
 end
 
 function output_signal=De_Cuantify(input_signal,bits,offset,max_val_band)
-  output_signal=input_signal./(bits^2-1)*max_val_band; 
+  output_signal=input_signal./(2^bits-1)*max_val_band; 
   output_signal=output_signal.+offset;  
 end
 
@@ -188,10 +188,10 @@ v4 = max(smues4);
 smues4c = compand(smues4,Mu,v4);
 
 % CUANTIFY  -------------------------------------------------------------------
-band1_bits=4;
-band2_bits=12;
-band3_bits=12;
-band4_bits=4;
+band1_bits=1;
+band2_bits=3;
+band3_bits=3;
+band4_bits=1;
 total_bits=band1_bits+band2_bits+band3_bits+band4_bits;
 [output_signal_band1,max_val_band1,offset_band1]=Cuantify(smues1c,band1_bits);
 [output_signal_band2,max_val_band2,offset_band2]=Cuantify(smues2c,band2_bits);
@@ -203,15 +203,14 @@ band2_bin=dec2bin(output_signal_band2,band2_bits);
 band3_bin=dec2bin(output_signal_band3,band3_bits);
 band4_bin=dec2bin(output_signal_band4,band4_bits);
 
-
 %Sava data in compressed file --------------------------------------------------------
 filename = 'compressed_file.bin';
 
 output_container=strcat(band1_bin,band2_bin,band3_bin,band4_bin);
-output_container_dec=uint32(base2dec(output_container,2));
+output_container_dec=uint8(base2dec(output_container,2));
 dimension=length(output_container_dec);
 fileID = fopen(filename,'w');
-fwrite(fileID,output_container_dec,'uint32');
+fwrite(fileID,output_container_dec,'uint8');
 fclose(fileID);
 
 % End of trnasmitter module -------------------------------------------------------------------
@@ -222,7 +221,7 @@ fclose(fileID);
 %Read data in compressed file -------------------------------------------------------------------
 fileID = fopen('compressed_file.bin');
 
-input_container_dec = fread(fileID,[dimension 1],'uint32'); 
+input_container_dec = fread(fileID,[dimension 1],'uint8'); 
 fclose(fileID);
 input_container=dec2bin(input_container_dec);
 band1_bin= substr(input_container,1,band1_bits);
